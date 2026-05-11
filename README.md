@@ -111,7 +111,7 @@ Dense(2, Softmax)
 ## 1️⃣ Clone Repository
 
 ```bash
-git clone https://github.com/username/mask-detector.git
+git clone https://github.com/rafiramdhani12/mask-detection.git
 cd mask-detector
 ```
 
