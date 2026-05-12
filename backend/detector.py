@@ -21,9 +21,10 @@ class MaskDetector:
         # Load Haar Cascade
         self.face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
         
+        # Kalo ngerasa ketuker, tinggal swap value 0 dan 1 di bawah ini:
         self.labels = {
-            0: "Aman: Pakai Masker",
-            1: "AWAS: GAK PAKE MASKER!"
+            0: "Aman: Pakai Masker",       # Index 0 biasanya WithMask
+            1: "AWAS: GAK PAKE MASKER!"    # Index 1 biasanya WithoutMask
         }
 
     def decode_image(self, base64_string):
@@ -48,13 +49,13 @@ class MaskDetector:
             face_roi = face_roi[int(h*0.2):, :]
             
             face_resized = cv2.resize(face_roi, (160, 160))
-            face_array = np.expand_dims(face_resized, axis=0)
             
-            # Note: training.py uses Rescaling(1./255) layer. 
-            # app.py uses mobilenet_v2.preprocess_input.
-            # We'll stick to the model's internal layers if possible or match app.py logic.
-            # Based on app.py:
-            face_array = tf.keras.applications.mobilenet_v2.preprocess_input(face_array.astype(np.float32))
+            # 1. Convert BGR (OpenCV) ke RGB (Keras/MobileNetV2)
+            face_rgb = cv2.cvtColor(face_resized, cv2.COLOR_BGR2RGB)
+            
+            # 2. Preprocessing MobileNetV2 (Ngubah range ke -1 s/d 1)
+            face_array = np.expand_dims(face_rgb, axis=0).astype(np.float32)
+            face_array = tf.keras.applications.mobilenet_v2.preprocess_input(face_array)
 
             predictions = self.model.predict(face_array, verbose=0)
             class_index = int(np.argmax(predictions))
