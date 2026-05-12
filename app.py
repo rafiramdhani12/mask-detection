@@ -22,10 +22,10 @@ except Exception as e:
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 # Label kelas
-# Pastikan ini sesuai hasil training lu (biasanya Alfabet: 0=Mask, 1=No Mask)
+# Pastikan ini sesuai hasil training (biasanya Alfabet: 0=Mask, 1=No Mask)
 LABELS = {
-    0: "Aman: Pakai Masker",       # balik lagi
-    1: "AWAS: GAK PAKE MASKER!"    # balik lagi
+    0: "Aman: Pakai Masker",       
+    1: "AWAS: GAK PAKE MASKER!"    
 }
 
 # Fungsi buat play suara di background
