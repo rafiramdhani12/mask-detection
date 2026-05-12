@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras # Tambahin ini
-import winsound
+import beepy
 import threading
 
 # ========== LOAD MODEL DENGAN CUSTOM OBJECTS ==========
@@ -30,10 +30,10 @@ LABELS = {
 
 # Fungsi buat play suara di background
 def play_alert():
-    winsound.Beep(1000, 500)
+    beepy.Beep(sound = 1)
 
 # ========== BUKA WEBCAM ==========
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(2)
 
 while True:
     ret, frame = cap.read()
