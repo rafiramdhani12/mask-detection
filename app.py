@@ -1,12 +1,12 @@
 import cv2
 import numpy as np
 import tensorflow as tf
-import winsound
+# import winsound
 import threading
 
 # ========== LOAD MODEL ==========
 # Pastikan nama file sesuai dengan yang lu save sebelumnya
-model = tf.keras.models.load_model("mask_detector.keras")
+# model = tf.keras.models.load_model("mask_detector.keras")
 
 # Load Haar Cascade untuk deteksi wajah (Bawaan OpenCV)
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
@@ -21,12 +21,12 @@ LABELS = {
 }
 
 # Fungsi buat play suara di background
-def play_alert():
-    # Frekuensi 1000Hz, durasi 500ms
-    winsound.Beep(1000, 500)
+# def play_alert():
+#     # Frekuensi 1000Hz, durasi 500ms
+#     winsound.Beep(1000, 500)
 
 # ========== BUKA WEBCAM ==========
-cap = cv2.VideoCapture(0) # 0 adalah ID default webcam laptop
+cap = cv2.VideoCapture(2) # 0 adalah ID default webcam laptop
 
 while True:
     ret, frame = cap.read()
@@ -68,7 +68,7 @@ while True:
             
             # Panggil alarm pake threading biar video gak nungguin bunyi selesai
             if threading.active_count() < 2: # Mencegah suara tumpang tindih spamming
-                threading.Thread(target=play_alert, daemon=True).start()
+                threading.Thread(target=None, daemon=True).start()
 
         # Gambar kotak di wajah
         cv2.rectangle(frame, (x, y), (x+w, y+h), color, 2)
