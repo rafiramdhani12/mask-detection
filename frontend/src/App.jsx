@@ -3,7 +3,7 @@ import Webcam from 'react-webcam';
 import axios from 'axios';
 import { ShieldCheck, ShieldAlert, Camera, RefreshCcw, Video, VideoOff } from 'lucide-react';
 
-const API_URL = 'http://localhost:5000/predict';
+const API_URL = 'http://amba12.hf.space /predict';
 
 function App() {
   const webcamRef = useRef(null);
@@ -54,7 +54,7 @@ function App() {
       const response = await axios.post(API_URL, { image: imageSrc });
       setResults(response.data);
       
-      const noMaskDetected = response.data.some(res => res.class_index === 1);
+      const noMaskDetected = response.data.some(res => res.label.includes("AWAS"));
       if (noMaskDetected) {
         playAlert();
       }
@@ -95,7 +95,7 @@ function App() {
 
     results.forEach(res => {
       const [x, y, w, h] = res.bbox;
-      const isMask = res.class_index === 0;
+      const isMask = res.label.includes("Aman");
       const color = isMask ? '#10b981' : '#ef4444';
 
       ctx.strokeStyle = color;
