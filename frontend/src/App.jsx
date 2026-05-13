@@ -3,7 +3,7 @@ import Webcam from 'react-webcam';
 import axios from 'axios';
 import { ShieldCheck, ShieldAlert, Camera, RefreshCcw, Video, VideoOff } from 'lucide-react';
 
-const API_URL = 'https://amba12.hf.space/predict';
+const API_URL = 'https://amba12-ai-detector.hf.space/predict';
 
 function App() {
   const webcamRef = useRef(null);
