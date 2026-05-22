@@ -9,7 +9,7 @@ import {
   VideoOff,
 } from 'lucide-react';
 
-const API_URL = 'https://amba12.hf.ai-detector/predict'
+const API_URL = 'https://amba12-ai-detector.hf.space/predict'
 
 function App() {
   const webcamRef = useRef(null);
