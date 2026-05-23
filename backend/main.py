@@ -7,7 +7,7 @@ app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
 
 # Initialize detector
-model_path = os.path.join("models", "mask_detector_demo.keras")
+model_path = os.path.join("models", "mask_detector.weights.h5")
 detector = MaskDetector(model_path)
 
 @app.route("/predict", methods=["POST"])
@@ -26,9 +26,6 @@ def predict():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route("/health", methods=["GET"])
-def health():
-    return jsonify({"status": "ok"})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

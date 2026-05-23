@@ -1,0 +1,22 @@
+# Abaikan Virtual Environment Python
+backend/venv/
+.venv/
+env/
+ENV/
+*/venv/
+
+# Abaikan folder dependensi Front-End
+frontend/node_modules/
+.pnpm-store/
+
+# Abaikan file Environment Variables (Rahasia)
+*.env
+*.env.local
+*.env.development
+*.env.production
+
+# Abaikan cache Python dan OS
+**/__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db

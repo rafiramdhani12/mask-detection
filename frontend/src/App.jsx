@@ -9,8 +9,6 @@ import {
   VideoOff,
 } from 'lucide-react';
 
-const API_URL = 'https://amba12-ai-detector.hf.space/predict'
-
 function App() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
@@ -79,7 +77,7 @@ function App() {
     setIsProcessing(true);
 
     try {
-      const response = await axios.post(API_URL, {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/predict`, {
         image: imageSrc,
       });
 
