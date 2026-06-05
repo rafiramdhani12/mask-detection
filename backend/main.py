@@ -4,12 +4,18 @@ from detector import MaskDetector
 import os
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for React frontend
-
+CORS(app, resources={
+    r"/predict": {
+        "origins": ["http://localhost:5173", "http://127.0.0.1:5173"],
+        "methods": ["POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 # Initialize detector
-model_path = os.path.join("models", "mask_detector.weights.h5")
+model_path = os.path.join("models", "mask_detector_updated.weights.h5")
 detector = MaskDetector(model_path)
 
+# Di app.py, ubah route predict
 @app.route("/predict", methods=["POST"])
 def predict():
     data = request.json
@@ -22,7 +28,21 @@ def predict():
             return jsonify({"error": "Invalid image data"}), 400
             
         results = detector.predict(frame)
-        return jsonify(results)
+
+        # Tambahin summary
+        total = len(results)
+        with_mask = sum(1 for r in results if "Aman" in r["label"])
+        without_mask = sum(1 for r in results if "AWAS" in r["label"])
+
+        return jsonify({
+            "detections": results,
+            "summary": {
+                "total_faces": total,
+                "with_mask": with_mask,
+                "without_mask": without_mask,
+                "status": "CLEAR" if without_mask == 0 else "VIOLATION"
+            }
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

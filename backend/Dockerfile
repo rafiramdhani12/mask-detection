@@ -27,4 +27,4 @@ ENV PORT=5000
 
 # 8. Jalankan aplikasi pake Gunicorn (lebih stabil buat production dibanding app.run)
 # Kita pake gunicorn biar Flask-nya gak gampang mati
-CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:$PORT app:app"]
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:$PORT main:app"]

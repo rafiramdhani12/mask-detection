@@ -14,6 +14,7 @@ function App() {
   const canvasRef = useRef(null);
 
   const [results, setResults] = useState([]);
+  const [summary , setSummary] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState(null);
   const [devices, setDevices] = useState([]);
@@ -81,12 +82,10 @@ function App() {
         image: imageSrc,
       });
 
-      setResults(response.data);
-
-      const noMaskDetected = response.data.some((res) =>
-        res.label.includes('AWAS')
-      );
-
+      const { detections, summary } = response.data;
+      setResults(detections);
+      setSummary(summary);
+      const noMaskDetected = summary.without_mask > 0;
       if (noMaskDetected) {
         playAlert();
       }
@@ -302,6 +301,47 @@ function App() {
       {/* ========================= */}
       {/* CAMERA CONTAINER */}
       {/* ========================= */}
+      {/* ========================= */}
+{/* SUMMARY BAR */}
+{/* ========================= */}
+      {isCameraOn && summary && (
+        <div className="relative z-10 mb-6 w-full max-w-4xl flex gap-4">
+
+          {/* Status */}
+          <div className={`
+            flex-1 rounded-2xl px-5 py-4 border flex items-center gap-3
+            ${summary.status === 'CLEAR'
+              ? 'bg-[#16211a] border-[#284c34] text-[#7dd3a0]'
+              : 'bg-[#2a1618] border-[#5f2d32] text-[#ff8a8a]'}
+          `}>
+            <div className={`w-3 h-3 rounded-full animate-pulse ${
+              summary.status === 'CLEAR' ? 'bg-[#7dd3a0]' : 'bg-[#ff8a8a]'
+            }`} />
+            <span className="font-semibold tracking-wide">
+              {summary.status === 'CLEAR' ? 'AREA AMAN' : 'PELANGGARAN TERDETEKSI'}
+            </span>
+          </div>
+
+          {/* Stats */}
+          <div className="bg-[#17191f]/90 border border-white/5 rounded-2xl px-5 py-4 flex gap-6 items-center">
+            <div className="text-center">
+              <p className="text-xs text-zinc-500 mb-1">Total Wajah</p>
+              <p className="text-xl font-semibold text-zinc-200">{summary.total_faces}</p>
+            </div>
+            <div className="w-px h-8 bg-white/5" />
+            <div className="text-center">
+              <p className="text-xs text-zinc-500 mb-1">Pakai Masker</p>
+              <p className="text-xl font-semibold text-[#7dd3a0]">{summary.with_mask}</p>
+            </div>
+            <div className="w-px h-8 bg-white/5" />
+            <div className="text-center">
+              <p className="text-xs text-zinc-500 mb-1">Tanpa Masker</p>
+              <p className="text-xl font-semibold text-[#ff8a8a]">{summary.without_mask}</p>
+            </div>
+          </div>
+
+        </div>
+      )}
       <div
         className="
           relative

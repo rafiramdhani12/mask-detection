@@ -57,22 +57,29 @@ class MaskDetector:
 
         for detection in detection_result.detections:
             bbox = detection.location_data.relative_bounding_box
+            keypoints = detection.location_data.relative_keypoints
+            # keypoints[0] = right eye, [1] = left eye
+            # keypoints[2] = nose tip, [3] = mouth center
 
-            # Konversi relative koordinat → pixel
             x = int(bbox.xmin * w_img)
             y = int(bbox.ymin * h_img)
-            w = int(bbox.width  * w_img)
+            w = int(bbox.width * w_img)
             h = int(bbox.height * h_img)
 
-            # Clamp biar nggak keluar frame
             x = max(0, x)
             y = max(0, y)
             w = min(w, w_img - x)
             h = min(h, h_img - y)
 
-            # Crop 20% area atas (dahi/rambut)
-            y_crop = y + int(h * 0.2)
-            face_roi = frame[y_crop:y+h, x:x+w]
+            # Ambil koordinat nose tip sebagai anchor
+            nose_y = int(keypoints[2].y * h_img)
+
+            # Crop dari nose ke bawah + padding dikit
+            padding = int(h * 0.1)
+            y_start = max(0, nose_y - padding)
+            y_end = min(h_img, y + h)
+
+            face_roi = frame[y_start:y_end, x:x+w]
             if face_roi.size == 0:
                 continue
 
@@ -81,13 +88,24 @@ class MaskDetector:
             face_array = np.expand_dims(face_rgb, axis=0).astype(np.float32)
             face_array = tf.keras.applications.mobilenet_v2.preprocess_input(face_array)
 
-            predictions = self.model.predict(face_array, verbose=0)
-            class_index = int(np.argmax(predictions))
+            CONFIDENCE_THRESHOLD = 0.75
 
+            predictions = self.model.predict(face_array, verbose=0)
+            confidence = float(np.max(predictions))
+
+            if confidence < CONFIDENCE_THRESHOLD:
+                results.append({
+                    "bbox": [x, y, w, h],
+                    "label": "Tidak Terdeteksi",
+                    "confidence": confidence
+                })
+                continue
+
+            class_index = int(np.argmax(predictions))
             results.append({
                 "bbox": [x, y, w, h],
                 "label": self.labels[class_index],
-                "confidence": float(np.max(predictions))
+                "confidence": confidence
             })
 
         return results
