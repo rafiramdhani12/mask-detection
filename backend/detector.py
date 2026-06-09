@@ -9,30 +9,35 @@ import base64
 class MaskDetector:
     def __init__(self, model_path):
         try:
+            IMG_SIZE = (224, 224, 3) 
+            
             base_model = keras.applications.MobileNetV2(
-                input_shape=(160, 160, 3),
+                input_shape=IMG_SIZE,
                 include_top=False,
-                weights=None
+                weights=None  
             )
             base_model.trainable = False
+            
+
             self.model = keras.Sequential([
-                keras.Input(shape=(160, 160, 3)),
+                keras.Input(shape=IMG_SIZE),
+                
                 base_model,
                 layers.GlobalAveragePooling2D(),
-                layers.Dropout(0.3),
+                layers.Dropout(0.5), 
                 layers.Dense(128, activation='relu'),
                 layers.Dense(2, activation='softmax')
             ])
             self.model.load_weights(model_path)
-            print("Model loaded successfully!")
+            print("Model loaded successfully with 224x224 shape!")
         except Exception as e:
             print(f"Gagal rakit model: {e}")
             raise e
 
-        # Ganti Haar Cascade ke MediaPipe
+        # MediaPipe Setup
         self.mp_face = mp.solutions.face_detection
         self.face_detector = self.mp_face.FaceDetection(
-            model_selection=0,       # 0 = short range (< 2m), cocok buat webcam
+            model_selection=0,       
             min_detection_confidence=0.6
         )
         self.labels = {0: "Aman: Pakai Masker", 1: "AWAS: GAK PAKE MASKER!"}
@@ -53,43 +58,38 @@ class MaskDetector:
 
         results = []
         if not detection_result.detections:
-            return results  # nggak ada wajah
+            return results  
 
         for detection in detection_result.detections:
             bbox = detection.location_data.relative_bounding_box
             
-            # [PERBAIKAN] Ambil ukuran pixel asli dari bounding box dasar terlebih dahulu
             w = int(bbox.width * w_img)
             h = int(bbox.height * h_img)
             x = int(bbox.xmin * w_img)
             y = int(bbox.ymin * h_img)
 
-            # 1. Hitung titik tengah (center) dari bounding box MediaPipe
             center_x = int((bbox.xmin + bbox.width / 2) * w_img)
             center_y = int((bbox.ymin + bbox.height / 2) * h_img)
             
-            # 2. Ambil ukuran terbesar antara width atau height agar jadi persegi sempurna
             max_side = max(w, h)
-            
-            # 3. Berikan padding tambahan (20% dari ukuran wajah) agar tidak terlalu ketat
             padding = int(max_side * 0.2)
             half_side = (max_side + padding) // 2
             
-            # 4. Tentukan koordinat pembatas baru berbentuk persegi
             x_start = max(0, center_x - half_side)
             y_start = max(0, center_y - half_side)
             x_end = min(w_img, center_x + half_side)
             y_end = min(h_img, center_y + half_side)
             
-            # 5. Potong ROI wajah utuh berbentuk persegi tanpa distorsi
             face_roi = frame[y_start:y_end, x_start:x_end]
             if face_roi.size == 0:
                 continue
 
-            face_resized = cv2.resize(face_roi, (160, 160))
+            # 2. PERBAIKAN: Resize ke 224 sesuai model baru Anda
+            face_resized = cv2.resize(face_roi, (224, 224))
             face_rgb = cv2.cvtColor(face_resized, cv2.COLOR_BGR2RGB)
+            
             face_array = np.expand_dims(face_rgb, axis=0).astype(np.float32)
-            face_array = tf.keras.applications.mobilenet_v2.preprocess_input(face_array)
+            face_array = keras.applications.mobilenet_v2.preprocess_input(face_array)
 
             CONFIDENCE_THRESHOLD = 0.85
 

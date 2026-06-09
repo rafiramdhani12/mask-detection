@@ -12,7 +12,7 @@ CORS(app, resources={
     }
 })
 # Initialize detector
-model_path = os.path.join("models", "mask_detector_updated.weights.h5")
+model_path = os.path.join("models", "mask_detector.weights.h5")
 detector = MaskDetector(model_path)
 
 # Di app.py, ubah route predict
