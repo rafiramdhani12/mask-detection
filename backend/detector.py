@@ -57,29 +57,32 @@ class MaskDetector:
 
         for detection in detection_result.detections:
             bbox = detection.location_data.relative_bounding_box
-            keypoints = detection.location_data.relative_keypoints
-            # keypoints[0] = right eye, [1] = left eye
-            # keypoints[2] = nose tip, [3] = mouth center
-
-            x = int(bbox.xmin * w_img)
-            y = int(bbox.ymin * h_img)
+            
+            # [PERBAIKAN] Ambil ukuran pixel asli dari bounding box dasar terlebih dahulu
             w = int(bbox.width * w_img)
             h = int(bbox.height * h_img)
+            x = int(bbox.xmin * w_img)
+            y = int(bbox.ymin * h_img)
 
-            x = max(0, x)
-            y = max(0, y)
-            w = min(w, w_img - x)
-            h = min(h, h_img - y)
-
-            # Ambil koordinat nose tip sebagai anchor
-            nose_y = int(keypoints[2].y * h_img)
-
-            # Crop dari nose ke bawah + padding dikit
-            padding = int(h * 0.1)
-            y_start = max(0, nose_y - padding)
-            y_end = min(h_img, y + h)
-
-            face_roi = frame[y_start:y_end, x:x+w]
+            # 1. Hitung titik tengah (center) dari bounding box MediaPipe
+            center_x = int((bbox.xmin + bbox.width / 2) * w_img)
+            center_y = int((bbox.ymin + bbox.height / 2) * h_img)
+            
+            # 2. Ambil ukuran terbesar antara width atau height agar jadi persegi sempurna
+            max_side = max(w, h)
+            
+            # 3. Berikan padding tambahan (20% dari ukuran wajah) agar tidak terlalu ketat
+            padding = int(max_side * 0.2)
+            half_side = (max_side + padding) // 2
+            
+            # 4. Tentukan koordinat pembatas baru berbentuk persegi
+            x_start = max(0, center_x - half_side)
+            y_start = max(0, center_y - half_side)
+            x_end = min(w_img, center_x + half_side)
+            y_end = min(h_img, center_y + half_side)
+            
+            # 5. Potong ROI wajah utuh berbentuk persegi tanpa distorsi
+            face_roi = frame[y_start:y_end, x_start:x_end]
             if face_roi.size == 0:
                 continue
 
@@ -88,7 +91,7 @@ class MaskDetector:
             face_array = np.expand_dims(face_rgb, axis=0).astype(np.float32)
             face_array = tf.keras.applications.mobilenet_v2.preprocess_input(face_array)
 
-            CONFIDENCE_THRESHOLD = 0.75
+            CONFIDENCE_THRESHOLD = 0.85
 
             predictions = self.model.predict(face_array, verbose=0)
             confidence = float(np.max(predictions))
