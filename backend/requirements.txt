@@ -5,3 +5,5 @@ opencv-python-headless
 numpy==1.26.4
 mediapipe==0.10.9
 gunicorn
+
+# ini make python 3.11 kalo nggak salah

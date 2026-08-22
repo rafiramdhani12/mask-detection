@@ -6,25 +6,23 @@ from tensorflow.keras import layers
 import mediapipe as mp
 import base64
 
+
 class MaskDetector:
     def __init__(self, model_path):
         try:
-            IMG_SIZE = (224, 224, 3) 
-            
+            IMG_SIZE = (224, 224, 3)
             base_model = keras.applications.MobileNetV2(
                 input_shape=IMG_SIZE,
                 include_top=False,
-                weights=None  
+                weights=None
             )
             base_model.trainable = False
-            
 
             self.model = keras.Sequential([
                 keras.Input(shape=IMG_SIZE),
-                
                 base_model,
                 layers.GlobalAveragePooling2D(),
-                layers.Dropout(0.5), 
+                layers.Dropout(0.5),
                 layers.Dense(128, activation='relu'),
                 layers.Dense(2, activation='softmax')
             ])
@@ -37,10 +35,15 @@ class MaskDetector:
         # MediaPipe Setup
         self.mp_face = mp.solutions.face_detection
         self.face_detector = self.mp_face.FaceDetection(
-            model_selection=0,       
-            min_detection_confidence=0.6
+            model_selection=1,          # full-range model, lebih akurat & lebih pilih2 dari model_selection=0
+            min_detection_confidence=0.75  # dinaikin dari 0.6, biar objek non-wajah (kipas dll) lebih susah lolos
         )
         self.labels = {0: "Aman: Pakai Masker", 1: "AWAS: GAK PAKE MASKER!"}
+
+        # Filter tambahan: rasio bounding box wajah manusia biasanya di rentang ini
+        self.MIN_ASPECT_RATIO = 0.65
+        self.MAX_ASPECT_RATIO = 1.35
+        self.CONFIDENCE_THRESHOLD = 0.85
 
     def decode_image(self, base64_string):
         if "," in base64_string:
@@ -58,45 +61,46 @@ class MaskDetector:
 
         results = []
         if not detection_result.detections:
-            return results  
+            return results
 
         for detection in detection_result.detections:
             bbox = detection.location_data.relative_bounding_box
-            
             w = int(bbox.width * w_img)
             h = int(bbox.height * h_img)
             x = int(bbox.xmin * w_img)
             y = int(bbox.ymin * h_img)
 
+            if w <= 0 or h <= 0:
+                continue
+
+            # Filter aspect ratio: buang box yang bentuknya "terlalu kotak/aneh"
+            # buat nyaring false positive kayak kipas angin, jam dinding, dll
+            aspect_ratio = w / h
+            if not (self.MIN_ASPECT_RATIO <= aspect_ratio <= self.MAX_ASPECT_RATIO):
+                continue
+
             center_x = int((bbox.xmin + bbox.width / 2) * w_img)
             center_y = int((bbox.ymin + bbox.height / 2) * h_img)
-            
             max_side = max(w, h)
             padding = int(max_side * 0.2)
             half_side = (max_side + padding) // 2
-            
             x_start = max(0, center_x - half_side)
             y_start = max(0, center_y - half_side)
             x_end = min(w_img, center_x + half_side)
             y_end = min(h_img, center_y + half_side)
-            
             face_roi = frame[y_start:y_end, x_start:x_end]
             if face_roi.size == 0:
                 continue
 
-            # 2. PERBAIKAN: Resize ke 224 sesuai model baru Anda
             face_resized = cv2.resize(face_roi, (224, 224))
             face_rgb = cv2.cvtColor(face_resized, cv2.COLOR_BGR2RGB)
-            
             face_array = np.expand_dims(face_rgb, axis=0).astype(np.float32)
             face_array = keras.applications.mobilenet_v2.preprocess_input(face_array)
-
-            CONFIDENCE_THRESHOLD = 0.85
 
             predictions = self.model.predict(face_array, verbose=0)
             confidence = float(np.max(predictions))
 
-            if confidence < CONFIDENCE_THRESHOLD:
+            if confidence < self.CONFIDENCE_THRESHOLD:
                 results.append({
                     "bbox": [x, y, w, h],
                     "label": "Tidak Terdeteksi",
