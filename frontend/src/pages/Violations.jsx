@@ -1,4 +1,8 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+
+
 
 const API_BASE = "http://localhost:5000";
 
@@ -174,6 +178,8 @@ export default function Violations() {
   const [statusFilter, setStatusFilter] = useState("all"); // all | unresolved | resolved
   const [search, setSearch] = useState("");
 
+  const navigate = useNavigate();
+
   const demoData = [
     {
       violation_id: "demo0000001",
@@ -260,6 +266,7 @@ export default function Violations() {
   return (
     <div className="min-h-screen bg-[#0B0F14] px-6 py-8 text-slate-200 sm:px-10">
       <div className="mx-auto max-w-4xl">
+        <ArrowLeft className="mb-6 h-6 w-6 cursor-pointer fill-slate-400 hover:fill-slate-300" onClick={() => navigate(-1)} />
         <div className="mb-6 flex items-start justify-between gap-4">
           <div>
             <div className="text-[11px] uppercase tracking-widest text-amber-500">

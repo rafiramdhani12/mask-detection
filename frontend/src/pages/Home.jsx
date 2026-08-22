@@ -8,6 +8,7 @@ import {
   Video,
   VideoOff,
 } from 'lucide-react';
+import { NavLink } from 'react-router-dom';
 
 function Home() {
   const webcamRef = useRef(null);
@@ -201,6 +202,12 @@ function Home() {
           Real-time Vision Monitoring System
         </p>
       </header>
+
+      {/* navbar */}
+
+      <nav className='bg-slate-800 rounded-2xl p-4 mb-4'>
+        <NavLink to="/Violations">violation</NavLink>
+      </nav>
 
       {/* ========================= */}
       {/* CONTROL PANEL */}
